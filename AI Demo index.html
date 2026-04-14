@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Academic Master - Pluvicto 臨床決策系統</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; color: #333; margin: 0; padding: 20px; }
+        .container { max-width: 950px; margin: 0 auto; background: white; padding: 35px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h1 { color: #0460a9; text-align: center; font-size: 26px; border-bottom: 2px solid #0460a9; padding-bottom: 15px; margin-bottom: 25px; }
+        h2 { color: #e74a21; font-size: 18px; margin-top: 25px; border-left: 4px solid #e74a21; padding-left: 10px; background-color: #fcf0ed; padding: 8px 10px; border-radius: 4px;}
+        .form-group { display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 10px; }
+        .input-box { flex: 1 1 22%; display: flex; flex-direction: column; }
+        label { font-size: 13px; font-weight: bold; margin-bottom: 5px; color: #444; }
+        input[type="number"], select { padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px; }
+        .sub-section { background: #eef5fa; padding: 15px; border-radius: 6px; margin-top: 10px; }
+        .checkbox-group { display: flex; gap: 15px; align-items: center; flex-wrap: wrap; margin-top: 5px;}
+        .checkbox-item { display: flex; align-items: center; gap: 5px; font-size: 14px; }
+        button { background: linear-gradient(135deg, #0460a9 0%, #034b85 100%); color: white; border: none; padding: 15px 20px; font-size: 18px; border-radius: 5px; cursor: pointer; width: 100%; margin-top: 30px; font-weight: bold; transition: 0.3s; box-shadow: 0 4px 6px rgba(4,96,169,0.3); }
+        button:hover { background: #034b85; transform: translateY(-2px); }
+        #resultArea { margin-top: 30px; padding: 25px; border-radius: 8px; display: none; font-size: 15px; line-height: 1.6; border: 2px solid transparent; }
+        .pass { background-color: #f0fdf4; color: #166534; border-color: #bbf7d0 !important; }
+        .fail { background-color: #fef2f2; color: #991b1b; border-color: #fecaca !important; }
+        .trial-badge { display: inline-block; background-color: #0460a9; color: white; padding: 5px 12px; border-radius: 20px; font-size: 14px; margin-bottom: 15px; font-weight: bold; }
+        .data-table { width: 100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 15px; background: white; }
+        .data-table th, .data-table td { border: 1px solid #ddd; padding: 10px; text-align: left; font-size: 14px; }
+        .data-table th { background-color: #f4f7f6; color: #0460a9; }
+        .highlight { color: #d9381e; font-weight: bold; }
+        .disclaimer { margin-top: 40px; font-size: 12px; color: #888; text-align: center; border-top: 1px solid #eee; padding-top: 15px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>鎦必妥 (Pluvicto) 臨床決策與研究預測系統</h1>
+
+    <h2>1. 血液指標 (仿單骨髓抑制評估)</h2>
+    <div class="form-group">
+        <div class="input-box"><label>血小板 (Platelet) x10^9/L</label><input type="number" id="platelet" value="150"></div>
+        <div class="input-box"><label>血紅素 (Hb) g/dL</label><input type="number" id="hb" value="11.5"></div>
+        <div class="input-box"><label>絕對嗜中性白血球 (ANC)</label><input type="number" id="anc" value="2.5"></div>
+        <div class="input-box"><label>白血球 (WBC) x10^9/L</label><input type="number" id="wbc" value="6.5"></div>
+    </div>
+
+    <h2>2. 肝腎功能指標 (仿單器官毒性評估)</h2>
+    <div class="form-group">
+        <div class="input-box"><label>CLcr (肌酸酐清除率)</label><input type="number" id="clcr" value="75"></div>
+        <div class="input-box"><label>AST (U/L)</label><input type="number" id="ast" value="28"></div>
+        <div class="input-box"><label>ALT (U/L)</label><input type="number" id="alt" value="30"></div>
+        <div class="input-box"><label>總膽紅素 (Bilirubin)</label><input type="number" id="bilirubin" value="0.8" step="0.1"></div>
+    </div>
+
+    <h2>3. 影像學與治療史 (對應臨床試驗條件)</h2>
+    <div class="sub-section">
+        <div class="form-group">
+            <div class="input-box" style="flex: 1 1 30%;">
+                <label>最近一次 PSA (ng/mL)</label>
+                <input type="number" id="psa_val" value="25">
+            </div>
+            <div class="input-box" style="flex: 1 1 65%;">
+                <label>影像報告：PSMA Uptake Score</label>
+                <select id="uptake">
+                    <option value="3">3 分 (強烈表現 - 高度適合)</option>
+                    <option value="2">2 分 (中度表現 - 適合)</option>
+                    <option value="1">1 分 (弱表現 - 不建議)</option>
+                    <option value="0">0 分 (無表現 - 排除)</option>
+                </select>
+            </div>
+        </div>
+        
+        <label style="margin-top:10px; display:block;">轉移部位 (可多選)：</label>
+        <div class="checkbox-group" style="margin-bottom: 15px;">
+            <div class="checkbox-item"><input type="checkbox" id="met_bone" checked>骨轉移 (Bone)</div>
+            <div class="checkbox-item"><input type="checkbox" id="met_lymph" checked>淋巴轉移 (Lymph Node)</div>
+            <div class="checkbox-item"><input type="checkbox" id="met_visceral">臟器轉移 (Visceral)</div>
+        </div>
+
+        <label style="border-top: 1px solid #ddd; padding-top: 10px; display:block;">治療史與未來路徑：</label>
+        <div class="checkbox-group">
+            <div class="checkbox-item"><input type="checkbox" id="usedARPI" checked> 曾接受過 ARPI</div>
+            <div class="checkbox-item"><input type="checkbox" id="usedChemo"> 曾接受過 Taxane 化療</div>
+            <div class="checkbox-item"><input type="checkbox" id="usedPARPi"> 曾接受過 PARPi</div>
+            <div class="checkbox-item"><input type="checkbox" id="usedRa223"> 曾接受過 Ra-223</div>
+            <div class="checkbox-item"><input type="checkbox" id="comboEnza"> 考慮與 Enzalutamide 合併治療 (Combo)</div>
+        </div>
+    </div>
+
+    <button onclick="calculateResult()">AI 運算：產出仿單建議與精準學術預測</button>
+
+    <div id="resultArea"></div>
+
+    <div class="disclaimer">
+        ⚠️ 本工具僅供專業醫事人員學術交流與內部報告使用，不代表正式醫療診斷或取代產品仿單指示。請依循臨床指引制定醫療決策。
+    </div>
+</div>
+
+<script>
+    function calculateResult() {
+        let plt = parseFloat(document.getElementById('platelet').value);
+        let hb = parseFloat(document.getElementById('hb').value);
+        let anc = parseFloat(document.getElementById('anc').value);
+        let clcr = parseFloat(document.getElementById('clcr').value);
+        let ast = parseFloat(document.getElementById('ast').value);
+        let alt = parseFloat(document.getElementById('alt').value);
+        let bilirubin = parseFloat(document.getElementById('bilirubin').value);
+        let uptake = parseInt(document.getElementById('uptake').value);
+        
+        let metVisceral = document.getElementById('met_visceral').checked;
+        let usedARPI = document.getElementById('usedARPI').checked;
+        let usedChemo = document.getElementById('usedChemo').checked;
+        let usedPARPi = document.getElementById('usedPARPi').checked;
+        let usedRa223 = document.getElementById('usedRa223').checked;
+        let comboEnza = document.getElementById('comboEnza').checked;
+
+        let resultArea = document.getElementById('resultArea');
+        let warnings = [];
+
+        // 安全防線
+        if (plt < 75) warnings.push("血小板數值過低 (<75)，建議暫停給藥。");
+        if (anc < 1.5) warnings.push("ANC 數值過低 (<1.5)，具備骨髓毒性風險。");
+        if (hb < 8) warnings.push("血紅素 < 8 g/dL，應暫停給藥。");
+        if (clcr < 30) warnings.push("CLcr < 30 mL/min，重度腎功能不全需密切監測。");
+        if (ast > 120 || alt > 120 || bilirubin > 1.5) warnings.push("肝功能顯著異常，請評估肝臟毒性風險。");
+        if (uptake < 2) warnings.push("PSMA Uptake Score 過低 (< 2分)，預期 Lu-177 攝取不足，不符合治療效益。");
+
+        resultArea.style.display = "block";
+        
+        if (warnings.length > 0) {
+            resultArea.className = "fail";
+            resultArea.innerHTML = "<strong>⚠️ 注意：系統偵測到不符合仿單安全性建議之項目</strong><br><ul>" + 
+                                   warnings.map(w => "<li>" + w + "</li>").join('') + 
+                                   "</ul><p><strong>AI 處置建議：</strong>請先進行支持性療法或重新評估影像結果。</p>";
+        } else {
+            resultArea.className = "pass";
+            let trialTitle = "";
+            let tableData = "";
+            
+            // 學術分流
+            if (comboEnza) {
+                trialTitle = "ENZA-p 研究情境 (Combo Therapy)";
+                tableData = `
+                    <tr><th>臨床指標</th><th>Pluvicto + Enza</th><th>Enza 單藥對照</th></tr>
+                    <tr><td>rPFS (影像無惡化)</td><td class="highlight">13.0 個月</td><td>7.8 個月</td></tr>
+                    <tr><td>PSA50 反應率</td><td class="highlight">93%</td><td>68%</td></tr>
+                    <tr><td colspan="3" style="font-size:13px; color:#555;">優勢分析：強強聯手展現更深度的 PSA 緩解，為高腫瘤負載病患提供新武器。</td></tr>
+                `;
+            } else if (usedARPI && usedChemo) {
+                trialTitle = "VISION & Thera-P 研究情境 (後線/抗化療)";
+                tableData = `
+                    <tr><th>臨床指標</th><th>VISION (vs 標準治療)</th><th>Thera-P (vs Cabazitaxel 化療)</th></tr>
+                    <tr><td>OS (整體存活)</td><td class="highlight">15.3 vs 11.3 個月</td><td>存活趨勢具備高度競爭力</td></tr>
+                    <tr><td>rPFS / PFS</td><td class="highlight">8.7 vs 3.4 個月</td><td>疾病惡化風險顯著降低</td></tr>
+                    <tr><td>PSA50 反應率</td><td>46% vs 7.1%</td><td class="highlight">66% vs 37% (勝過化療)</td></tr>
+                `;
+            } else if (usedARPI && !usedChemo) {
+                trialTitle = "PSMAfore & PLUDO 研究情境 (化療前線)";
+                tableData = `
+                    <tr><th>臨床指標</th><th>PSMAfore (Pre-taxane)</th><th>PLUDO (探索性合併)</th></tr>
+                    <tr><td>rPFS (影像無惡化)</td><td class="highlight">12.0 vs 5.6 個月</td><td>早期協同作用顯著</td></tr>
+                    <tr><td>PSA50 反應率</td><td class="highlight">57.6% vs 20.4%</td><td>深度腫瘤反應</td></tr>
+                    <tr><td colspan="3" style="font-size:13px; color:#555;">優勢分析：提前介入可有效推遲化療時間，並顯著維持病患生活品質 (QoL)。</td></tr>
+                `;
+            } else {
+                trialTitle = "一般適應症分析";
+                tableData = "<tr><td colspan='3'>病患生理與影像數值達標，請依循臨床指引制定個人化療程。</td></tr>";
+            }
+
+            let extraAlerts = "";
+            if (metVisceral) {
+                extraAlerts += "<div style='background:#fff3cd; color:#856404; padding:10px; border-radius:5px; margin-top:15px; font-size:14px;'>💡 <strong>AI 臨床洞察：</strong>檢測到臟器轉移 (Visceral Met)。根據亞組分析預後較具挑戰，建議嚴密追蹤 PSA 與影像變化。</div>";
+            }
+            if (usedPARPi || usedRa223) {
+                extraAlerts += "<div style='background:#e2e3e5; color:#383d41; padding:10px; border-radius:5px; margin-top:10px; font-size:14px;'>📌 <strong>治療史註記：</strong>病患曾接受過 PARPi 或 Ra-223，請參酌過往累積之骨髓抑制情況，適時調整抽血追蹤頻率。</div>";
+            }
+
+            resultArea.innerHTML = `
+                <div class='trial-badge'>🎯 AI 系統配對：${trialTitle}</div>
+                <br><strong>✅ 檢驗數值與影像 (Uptake Score) 均符合治療門檻，具備高度臨床獲益潛力。</strong>
+                <table class="data-table">${tableData}</table>
+                ${extraAlerts}
+            `;
+        }
+    }
+</script>
+
+</body>
+</html>
